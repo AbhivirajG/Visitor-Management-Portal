@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Bungalows — Visitor Registration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-dark:#0C0B09;
+  --gold:#C9A462;
+  --gold-light:#E8D5A3;
+  --gold-pale:#F5EDD8;
+  --cream:#FAF6EF;
+  --muted:#7A6F61;
+  --white:#FFFFFF;
+  --card-bg:#FFFFFF;
+  --border:#E5DDD0;
+  --error:#C0392B;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg-dark);
+  color:var(--white);
+  -webkit-font-smoothing:antialiased;
+}
+.cg{font-family:'Cormorant Garamond',serif}
+.hidden{display:none !important}
+
+/* ===== HEADER ===== */
+.app-header{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  height:64px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;background:var(--bg-dark);
+  border-bottom:1px solid rgba(201,164,98,0.2);
+}
+.app-header .logo-ecity{height:40px;background:#fff;padding:4px 10px;border-radius:6px;display:block;}
+.header-right{display:flex;gap:12px;align-items:center}
+.pill{
+  border:1px solid rgba(201,164,98,0.4);
+  padding:6px 16px;border-radius:20px;
+  font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--gold);
+  white-space:nowrap;
+}
+
+/* ===== SCREENS ===== */
+.screen{display:none;min-height:100vh}
+.screen.active{display:block}
+
+/* ===== LANDING ===== */
+#landing{display:none;flex-direction:column;min-height:100vh}
+#landing.active{display:flex}
+.hero{
+  position:relative;flex:1;min-height:540px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:90px 24px 60px;overflow:hidden;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background:url('assets/building.png') center/cover no-repeat;
+  z-index:0;
+}
+.hero-overlay{
+  position:absolute;inset:0;z-index:1;
+  background:linear-gradient(180deg, rgba(12,11,9,0.75) 0%, rgba(12,11,9,0.3) 40%, rgba(12,11,9,0.85) 100%);
+}
+.hero-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center}
+.hero-logo{width:300px;max-width:80vw;filter:drop-shadow(0 2px 12px rgba(255,255,255,0.15)) brightness(0) invert(1);}
+.gold-divider{width:60px;height:1px;background:rgba(201,164,98,0.6);margin:28px 0;}
+.tagline{font-family:'Cormorant Garamond',serif;font-size:16px;letter-spacing:0.25em;color:var(--cream);margin-bottom:40px;}
+.btn-gold{
+  background:var(--gold);color:var(--bg-dark);border:none;cursor:pointer;
+  font-family:'Inter',sans-serif;font-weight:500;font-size:13px;letter-spacing:0.1em;
+  padding:16px 36px;border-radius:6px;transition:all 0.25s ease;
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(201,164,98,0.35);}
+.btn-gold:disabled{opacity:0.4;cursor:not-allowed;transform:none;box-shadow:none;}
+.start-btn{width:260px;height:52px;}
+
+.stats-bar{
+  background:var(--bg-dark);border-top:1px solid rgba(201,164,98,0.15);
+  display:flex;justify-content:center;gap:80px;flex-wrap:wrap;padding:48px 24px;
+}
+.stat{text-align:center}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;color:var(--white);line-height:1;}
+.stat-label{font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-top:10px;}
+
+.app-footer{
+  background:var(--bg-dark);border-top:1px solid rgba(201,164,98,0.1);
+  display:flex;justify-content:center;gap:32px;flex-wrap:wrap;align-items:center;
+  padding:18px 24px;font-size:12px;color:var(--muted);
+}
+.app-footer .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.dot-green{background:#3FAE5A;box-shadow:0 0 6px #3FAE5A}
+.dot-gold{color:var(--gold)}
+
+/* ===== MODAL ===== */
+.overlay{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(12,11,9,0.75);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;padding:24px;
+}
+.overlay.active{display:flex}
+.modal-card{
+  background:var(--white);color:var(--bg-dark);width:440px;max-width:100%;
+  border-radius:20px;padding:40px;position:relative;
+}
+.modal-close{
+  position:absolute;top:18px;right:18px;width:32px;height:32px;border:none;
+  background:transparent;cursor:pointer;color:var(--muted);font-size:24px;line-height:1;
+  transition:all 0.25s ease;border-radius:8px;
+}
+.modal-close:hover{color:var(--bg-dark)}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;margin-bottom:24px;color:var(--bg-dark)}
+.opt-card{
+  display:flex;align-items:center;gap:16px;height:64px;padding:0 20px;
+  border:1.5px solid var(--border);border-radius:10px;cursor:pointer;
+  margin-bottom:14px;transition:all 0.25s ease;
+}
+.opt-card:hover{border-color:var(--gold-light)}
+.opt-card.selected{border-color:var(--gold);background:rgba(201,164,98,0.06)}
+.radio{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--gold);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.opt-card.selected .radio::after{content:'';width:10px;height:10px;border-radius:50%;background:var(--gold)}
+.opt-icon{font-size:22px}
+.opt-label{font-family:'Inter',sans-serif;font-size:15px;color:var(--bg-dark)}
+
+/* ===== FORM PAGES ===== */
+.form-page{background:var(--cream);color:var(--bg-dark);min-height:100vh;padding-top:64px}
+.form-topbar{
+  display:flex;align-items:center;justify-content:center;position:relative;
+  padding:22px 24px;border-bottom:1px solid var(--border);background:var(--white);
+}
+.back-link{
+  position:absolute;left:24px;background:none;border:none;cursor:pointer;
+  color:var(--muted);font-family:'Inter';font-size:14px;display:flex;align-items:center;gap:6px;
+  transition:all 0.25s ease;
+}
+.back-link:hover{color:var(--bg-dark)}
+.form-topbar-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bg-dark)}
+.form-wrap{display:flex;justify-content:center;padding:48px 20px 80px}
+.form-card{
+  background:var(--card-bg);border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.08);
+  padding:44px;width:100%;
+}
+.cp-card{max-width:560px}
+.client-card{max-width:680px}
+.form-title{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:var(--bg-dark);}
+.title-bar{width:40px;height:3px;background:var(--gold);margin:14px 0 32px;border-radius:2px}
+
+.field{margin-bottom:20px}
+.field label{display:block;font-family:'Inter';font-size:13px;font-weight:500;color:var(--bg-dark);margin-bottom:8px}
+.req{color:var(--gold)}
+input[type=text],input[type=tel],input[type=email],input[type=password],input[type=date],select,textarea{
+  width:100%;border:1px solid var(--border);padding:12px;border-radius:8px;
+  font-family:'Inter',sans-serif;font-size:14px;color:var(--bg-dark);background:var(--white);
+  transition:all 0.25s ease;
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,164,98,0.15)}
+textarea{resize:vertical;min-height:84px}
+.err-msg{color:var(--error);font-size:12px;font-family:'Inter';margin-top:6px;display:none}
+.field.invalid .err-msg{display:block}
+.field.invalid input,.field.invalid select{border-color:var(--error)}
+
+.section{margin-top:8px;margin-bottom:8px}
+.section-label{
+  font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--bg-dark);
+  margin-bottom:16px;padding-top:24px;border-top:1px solid rgba(201,164,98,0.4);margin-top:28px;
+}
+.section-label:first-child,.section.first .section-label{border-top:none;padding-top:0;margin-top:0}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.tile-row{display:flex;flex-wrap:wrap;gap:12px}
+.tile{
+  border:1px solid var(--border);border-radius:10px;padding:14px 22px;cursor:pointer;
+  font-family:'Inter';font-size:14px;color:var(--bg-dark);background:var(--white);
+  transition:all 0.25s ease;user-select:none;
+}
+.tile:hover{border-color:var(--gold-light)}
+.tile.selected{border:2px solid var(--gold);background:rgba(201,164,98,0.08);padding:13px 21px}
+.toggle-row{display:flex;gap:14px}
+.toggle-tile{flex:1;text-align:center}
+
+/* CP search */
+.cp-results{margin-top:10px;border:1px solid var(--border);border-radius:8px;overflow:hidden;display:none}
+.cp-results.show{display:block}
+.cp-result-row{padding:12px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--border);transition:all 0.2s ease}
+.cp-result-row:last-child{border-bottom:none}
+.cp-result-row:hover{background:rgba(201,164,98,0.1)}
+.cp-result-row strong{font-weight:500}
+.cp-empty{margin-top:12px;border:1.5px dashed var(--border);border-radius:10px;padding:20px;text-align:center;color:var(--muted);display:none}
+.cp-empty.show{display:block}
+.btn-outline{
+  background:transparent;border:1px solid var(--gold);color:var(--gold);cursor:pointer;
+  font-family:'Inter';font-size:13px;letter-spacing:0.06em;padding:10px 18px;border-radius:6px;
+  transition:all 0.25s ease;
+}
+.btn-outline:hover{background:rgba(201,164,98,0.1);transform:translateY(-2px)}
+.cp-miniform{margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:18px;background:var(--gold-pale);display:none}
+.cp-miniform.show{display:block;animation:slideDown 0.3s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.cp-chip{
+  display:none;align-items:center;gap:10px;margin-top:12px;
+  border:1.5px solid var(--gold);border-radius:10px;padding:12px 16px;background:rgba(201,164,98,0.08);
+}
+.cp-chip.show{display:inline-flex}
+.cp-chip .x{cursor:pointer;color:var(--muted);font-size:18px;margin-left:6px}
+.cp-chip .x:hover{color:var(--bg-dark)}
+
+/* SUCCESS */
+#success{position:relative;align-items:center;justify-content:center;text-align:center;padding:90px 24px 40px;}
+#success.active{display:flex;flex-direction:column;min-height:100vh}
+.success-card{
+  position:relative;z-index:2;background:rgba(12,11,9,0.55);backdrop-filter:blur(6px);
+  border:1px solid rgba(201,164,98,0.3);border-radius:20px;padding:48px 44px;max-width:480px;width:100%;
+}
+.check-circle{
+  width:84px;height:84px;border-radius:50%;background:var(--gold);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 28px;
+  box-shadow:0 6px 24px rgba(201,164,98,0.4);
+}
+.check-circle svg{width:42px;height:42px}
+.success-title{font-family:'Cormorant Garamond',serif;font-size:40px;color:var(--white);font-weight:500}
+.success-card .gold-divider{margin:22px auto}
+.success-thanks{font-size:16px;color:var(--cream);margin-bottom:6px}
+.success-sub{font-size:14px;color:var(--muted);margin-bottom:18px}
+.success-id{font-family:'Courier New',monospace;font-size:13px;color:var(--gold);margin-bottom:28px}
+.success-actions{display:flex;flex-direction:column;gap:14px;align-items:center}
+.btn-ghost{background:transparent;border:none;color:var(--cream);cursor:pointer;font-family:'Inter';font-size:13px;letter-spacing:0.06em;transition:all 0.25s ease}
+.btn-ghost:hover{color:var(--gold)}
+.btn-outline-white{
+  background:transparent;border:1px solid var(--gold);color:var(--white);cursor:pointer;
+  font-family:'Inter';font-size:13px;letter-spacing:0.08em;padding:14px 30px;border-radius:6px;
+  transition:all 0.25s ease;width:260px;
+}
+.btn-outline-white:hover{background:rgba(201,164,98,0.15);transform:translateY(-2px)}
+
+@media(max-width:640px){
+  .app-header{padding:0 16px}
+  .header-right .pill.date-pill{display:none}
+  .stats-bar{gap:36px;padding:36px 16px}
+  .stat-num{font-size:40px}
+  .grid-2{grid-template-columns:1fr}
+  .form-card{padding:28px 20px}
+  .toggle-row{flex-direction:column}
+  .form-topbar-title{font-size:18px}
+  .hero-logo{width:220px}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+  <img src="assets/ecity-logo.png" alt="E-City Ventures" class="logo-ecity">
+  <div class="header-right">
+    <span class="pill date-pill" id="clockDate">—</span>
+    <span class="pill" id="clockTime">—</span>
+  </div>
+</header>
+
+<!-- SCREEN 1: LANDING -->
+<div id="landing" class="screen active">
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <img src="assets/bungalows-logo.png" alt="The Bungalows" class="hero-logo">
+      <div class="gold-divider"></div>
+      <div class="tagline">FEW · FINE · FABULOUS</div>
+      <button class="btn-gold start-btn" id="startBtn">
+        <span>＋</span> START NEW REGISTRATION <span>→</span>
+      </button>
+    </div>
+  </section>
+  <section class="stats-bar" id="statsBar">
+    <div class="stat"><div class="stat-num" data-base="1852" data-key="people">0</div><div class="stat-label">People Visited</div></div>
+    <div class="stat"><div class="stat-num" data-base="1787" data-key="partners">0</div><div class="stat-label">Channel Partners</div></div>
+    <div class="stat"><div class="stat-num" data-base="1799" data-key="eoi">0</div><div class="stat-label">EOI Submitted</div></div>
+  </section>
+  <footer class="app-footer">
+    <span><span class="dot dot-green"></span>System Online</span>
+    <span><span class="dot-gold">◎</span> Secure Connection</span>
+    <span>© 2026 E-City Ventures</span>
+  </footer>
+</div>
+
+<!-- SCREEN 3A: CHANNEL PARTNER -->
+<div id="cpScreen" class="screen form-page">
+  <div class="form-topbar">
+    <button class="back-link" data-back>↑ Back</button>
+    <span class="form-topbar-title">Channel Partner Registration</span>
+  </div>
+  <div class="form-wrap">
+    <form class="form-card cp-card" id="cpForm" novalidate>
+      <h1 class="form-title">Channel Partner Registration</h1>
+      <div class="title-bar"></div>
+      <div class="field" id="f_cp_name">
+        <label>Channel Partner Name <span class="req">*</span></label>
+        <input type="text" name="name" autocomplete="off">
+        <div class="err-msg">Please enter the channel partner name.</div>
+      </div>
+      <div class="field" id="f_cp_phone">
+        <label>Channel Partner Phone Number <span class="req">*</span></label>
+        <input type="tel" name="phone" maxlength="10" autocomplete="off">
+        <div class="err-msg">Enter a valid 10-digit mobile number.</div>
+      </div>
+      <div class="field" id="f_cp_company">
+        <label>Company Name <span class="req">*</span></label>
+        <input type="text" name="company" autocomplete="off">
+        <div class="err-msg">Please enter the company name.</div>
+      </div>
+      <div class="field">
+        <label>Notes (Optional)</label>
+        <textarea name="notes" rows="3"></textarea>
+      </div>
+      <button type="submit" class="btn-gold" style="width:100%;height:50px">Submit &amp; Verify →</button>
+    </form>
+  </div>
+</div>
+
+<!-- SCREEN 3B: CLIENT -->
+<div id="clientScreen" class="screen form-page">
+  <div class="form-topbar">
+    <button class="back-link" data-back>↑ Back</button>
+    <span class="form-topbar-title">Client / Visitor Registration</span>
+  </div>
+  <div class="form-wrap">
+    <form class="form-card client-card" id="clientForm" novalidate>
+      <h1 class="form-title">Client / Visitor Registration</h1>
+      <div class="title-bar"></div>
+
+      <!-- How did you hear -->
+      <div class="section first">
+        <div class="section-label">How did you hear about us?</div>
+        <div class="toggle-row">
+          <div class="tile toggle-tile" data-source="channel_partner">Through Channel Partner</div>
+          <div class="tile toggle-tile" data-source="direct">Direct Enquiry</div>
+        </div>
+        <div class="err-msg" id="err_source" style="margin-top:8px">Please select how you heard about us.</div>
+
+        <!-- CP details -->
+        <div id="cpDetails" class="hidden" style="margin-top:18px">
+          <label style="display:block;font-size:13px;font-weight:500;margin-bottom:8px">Channel Partner Details</label>
+          <input type="text" id="cpSearch" placeholder="Search by name or phone (min. 4 characters)" autocomplete="off">
+          <div class="cp-results" id="cpResults"></div>
+          <div class="cp-empty" id="cpEmpty">
+            <div style="margin-bottom:12px">No channel partner found</div>
+            <button type="button" class="btn-outline" id="cpAddNewBtn">+ Add New Channel Partner</button>
+          </div>
+          <div class="cp-miniform" id="cpMiniForm">
+            <div class="field" style="margin-bottom:12px"><label>Name <span class="req">*</span></label><input type="text" id="mini_name" autocomplete="off"></div>
+            <div class="field" style="margin-bottom:12px"><label>Phone <span class="req">*</span></label><input type="tel" id="mini_phone" maxlength="10" autocomplete="off"></div>
+            <div class="field" style="margin-bottom:12px"><label>Company <span class="req">*</span></label><input type="text" id="mini_company" autocomplete="off"></div>
+            <div id="miniErr" style="color:var(--error);font-size:12px;margin-bottom:10px;display:none">All fields are required; phone must be 10 digits.</div>
+            <button type="button" class="btn-gold" id="cpMiniSave" style="padding:10px 22px">Add &amp; Select</button>
+          </div>
+          <div class="cp-chip" id="cpChip">
+            <span id="cpChipName"></span><span style="color:var(--gold)">✓</span>
+            <span class="x" id="cpChipX">×</span>
+          </div>
+          <div class="err-msg" id="err_cp_select" style="margin-top:8px">Please select or add a channel partner.</div>
+        </div>
+
+        <!-- Direct source -->
+        <div id="directDetails" class="hidden" style="margin-top:18px">
+          <div class="field" id="f_enquiry">
+            <label>Source of Enquiry <span class="req">*</span></label>
+            <select id="enquirySource">
+              <option value="">Select source</option>
+              <option value="newspaper">Newspaper</option>
+              <option value="digital">Digital</option>
+              <option value="online">Online</option>
+              <option value="hoarding">Hoarding</option>
+              <option value="billboard">Billboard</option>
+              <option value="reference">Reference</option>
+              <option value="others">Others</option>
+            </select>
+            <div class="err-msg">Please select a source of enquiry.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Client Details -->
+      <div class="section">
+        <div class="section-label">Client Details</div>
+        <div class="grid-2">
+          <div class="field" id="f_name">
+            <label>Full Name <span class="req">*</span></label>
+            <input type="text" name="name" autocomplete="off">
+            <div class="err-msg">Please enter the full name.</div>
+          </div>
+          <div class="field" id="f_email">
+            <label>Email</label>
+            <input type="email" name="email" autocomplete="off">
+            <div class="err-msg">Please enter a valid email address.</div>
+          </div>
+          <div class="field" id="f_phone">
+            <label>Phone <span class="req">*</span></label>
+            <input type="tel" name="phone" maxlength="10" autocomplete="off">
+            <div class="err-msg">Enter a valid 10-digit mobile number.</div>
+          </div>
+          <div class="field" id="f_city">
+            <label>City</label>
+            <select name="city">
+              <option value="">Select city</option>
+              <option>Delhi</option><option>Gurugram</option><option>Noida</option>
+              <option>Faridabad</option><option>Gurgaon</option><option>Manesar</option><option>Other</option>
+            </select>
+          </div>
+          <div class="field" id="f_aadhaar">
+            <label>Aadhaar Last 4 Digits (optional)</label>
+            <input type="text" name="aadhaar" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" autocomplete="off">
+            <div class="err-msg">Enter exactly 4 digits.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Configuration -->
+      <div class="section">
+        <div class="section-label">Configuration Interested In <span class="req">*</span></div>
+        <div class="tile-row" id="configTiles">
+          <div class="tile" data-config="4bhk">4 BHK</div>
+          <div class="tile" data-config="5bhk">5 BHK</div>
+          <div class="tile" data-config="6bhk">6 BHK</div>
+          <div class="tile" data-config="lease">Lease</div>
+          <div class="tile" data-config="any">Any</div>
+        </div>
+        <div class="err-msg" id="err_config" style="margin-top:8px">Please select a configuration.</div>
+      </div>
+
+      <!-- Booking -->
+      <div class="section">
+        <div class="section-label">When do you want to book? <span class="req">*</span></div>
+        <div class="tile-row" id="bookingTiles">
+          <div class="tile" data-booking="immediate">Immediate</div>
+          <div class="tile" data-booking="2months">Within 2 Months</div>
+          <div class="tile" data-booking="3months">Within 3 Months</div>
+        </div>
+        <div class="err-msg" id="err_booking" style="margin-top:8px">Please select a booking timeline.</div>
+      </div>
+
+      <!-- Notes -->
+      <div class="section">
+        <div class="section-label">Additional Notes</div>
+        <textarea name="notes" rows="3" placeholder="Any remarks, preferences, follow-up details..."></textarea>
+      </div>
+
+      <button type="submit" class="btn-gold" style="width:100%;height:50px;margin-top:28px">Submit Registration</button>
+    </form>
+  </div>
+</div>
+
+<!-- SCREEN 4: SUCCESS -->
+<div id="success" class="screen">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="success-card">
+    <div class="check-circle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#0C0B09" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    </div>
+    <h1 class="success-title">Registration Successful</h1>
+    <div class="gold-divider"></div>
+    <div class="success-thanks">Thank you, <span id="successName">—</span></div>
+    <div class="success-sub">Your registration has been recorded.</div>
+    <div class="success-id">Registration ID: #<span id="successId">—</span></div>
+    <div class="success-actions">
+      <button class="btn-outline-white" id="registerAnother">Register Another Visitor</button>
+      <button class="btn-ghost" id="returnHome">Return to Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: REGISTRATION TYPE -->
+<div class="overlay" id="typeModal">
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose">×</button>
+    <h2 class="modal-title">Select Registration Type</h2>
+    <div class="opt-card" data-type="channel_partner">
+      <div class="radio"></div>
+      <span class="opt-icon">💼</span>
+      <span class="opt-label">Channel Partner</span>
+    </div>
+    <div class="opt-card" data-type="client">
+      <div class="radio"></div>
+      <span class="opt-icon">🧑</span>
+      <span class="opt-label">Client / Visitor</span>
+    </div>
+    <button class="btn-gold" id="modalContinue" style="width:100%;height:50px;margin-top:14px" disabled>Continue</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* ===================== DATA LAYER (Supabase) ===================== */
+const SUPABASE_URL = 'https://xlcxmewqhtdfrejwmcim.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_0xF7srGG1ANRDbbeLALsiA_x1mmOKUK';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let _cache = [];
+
+async function initData(){
+  const { data, error } = await sb.from('registrations').select('data').order('created_at', { ascending: false });
+  if(error){ console.error('Supabase load error:', error); return; }
+  _cache = (data || []).map(r => r.data);
+}
+function getRegistrations(){ return _cache; }
+async function saveRegistration(obj){
+  const { error } = await sb.from('registrations').insert([{
+    id: obj.id, type: obj.type, name: obj.name, phone: obj.phone,
+    created_at: obj.createdAt, timestamp: obj.timestamp, data: obj
+  }]);
+  if(error){ console.error('Supabase insert error:', error); throw error; }
+  _cache.unshift(obj);
+}
+function getChannelPartners(){ return _cache.filter(r => r.type === 'channel_partner'); }
+
+/* ===================== CLOCK ===================== */
+function updateClock(){
+  const now = new Date();
+  const dOpts = {weekday:'long', month:'long', day:'numeric', year:'numeric'};
+  document.getElementById('clockDate').textContent = now.toLocaleDateString('en-US', dOpts);
+  document.getElementById('clockTime').textContent = now.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit',second:'2-digit',hour12:true});
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+/* ===================== STATS COUNT-UP ===================== */
+function easeOutQuad(t){return t*(2-t);}
+function animateCount(el, target){
+  const duration = 2000;
+  const start = performance.now();
+  function frame(now){
+    const p = Math.min((now-start)/duration, 1);
+    el.textContent = Math.round(easeOutQuad(p)*target).toLocaleString('en-US') + '+';
+    if(p<1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+function initStats(){
+  const regs = getRegistrations();
+  const cpCount = regs.filter(r=>r.type==='channel_partner').length;
+  const clientCount = regs.filter(r=>r.type==='client').length;
+  const totals = {
+    people: 1852 + regs.length,
+    partners: 1787 + cpCount,
+    eoi: 1799 + clientCount
+  };
+  const nums = document.querySelectorAll('.stat-num');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        const el = e.target;
+        animateCount(el, totals[el.dataset.key]);
+        io.unobserve(el);
+      }
+    });
+  }, {threshold:0.4});
+  nums.forEach(n=>io.observe(n));
+}
+
+/* ===================== SCREEN NAV ===================== */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function goHome(){
+  showScreen('landing');
+}
+document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click', goHome));
+
+/* ===================== TYPE MODAL ===================== */
+const typeModal = document.getElementById('typeModal');
+let selectedType = null;
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  selectedType = null;
+  document.querySelectorAll('.opt-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('modalContinue').disabled = true;
+  typeModal.classList.add('active');
+});
+document.getElementById('modalClose').addEventListener('click', ()=>typeModal.classList.remove('active'));
+typeModal.addEventListener('click', e=>{ if(e.target===typeModal) typeModal.classList.remove('active'); });
+document.querySelectorAll('.opt-card').forEach(card=>{
+  card.addEventListener('click', ()=>{
+    document.querySelectorAll('.opt-card').forEach(c=>c.classList.remove('selected'));
+    card.classList.add('selected');
+    selectedType = card.dataset.type;
+    document.getElementById('modalContinue').disabled = false;
+  });
+});
+document.getElementById('modalContinue').addEventListener('click', ()=>{
+  typeModal.classList.remove('active');
+  if(selectedType === 'channel_partner'){ resetCpForm(); showScreen('cpScreen'); }
+  else { resetClientForm(); showScreen('clientScreen'); }
+});
+
+/* ===================== VALIDATION HELPERS ===================== */
+const phoneRe = /^[6-9]\d{9}$/;
+const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function setInvalid(fieldEl, bad){ fieldEl.classList.toggle('invalid', bad); }
+function scrollToFirstError(container){
+  const first = container.querySelector('.field.invalid, .err-msg[style*="block"]');
+  const firstShown = container.querySelector('.field.invalid');
+  if(firstShown) firstShown.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+/* ===================== CHANNEL PARTNER FORM ===================== */
+const cpForm = document.getElementById('cpForm');
+function resetCpForm(){
+  cpForm.reset();
+  cpForm.querySelectorAll('.field').forEach(f=>f.classList.remove('invalid'));
+}
+cpForm.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const name = cpForm.name.value.trim();
+  const phone = cpForm.phone.value.trim();
+  const company = cpForm.company.value.trim();
+  const notes = cpForm.notes.value.trim();
+  let ok = true;
+  setInvalid(document.getElementById('f_cp_name'), !name); if(!name) ok=false;
+  setInvalid(document.getElementById('f_cp_phone'), !phoneRe.test(phone)); if(!phoneRe.test(phone)) ok=false;
+  setInvalid(document.getElementById('f_cp_company'), !company); if(!company) ok=false;
+  if(!ok){ scrollToFirstError(cpForm); return; }
+  const id = 'TB-' + Date.now();
+  const cpSubmitBtn = cpForm.querySelector('button[type="submit"]');
+  cpSubmitBtn.disabled=true; cpSubmitBtn.textContent='Saving…';
+  try {
+    await saveRegistration({ id, type:'channel_partner', name, phone, company, notes, timestamp:new Date().toISOString(), createdAt:Date.now() });
+    showSuccess(name, id);
+  } catch(err) {
+    alert('Failed to save. Please check your connection and try again.');
+    cpSubmitBtn.disabled=false; cpSubmitBtn.textContent='Submit & Verify';
+  }
+});
+
+/* ===================== CLIENT FORM ===================== */
+const clientForm = document.getElementById('clientForm');
+let clientState = { source:null, config:null, booking:null, cp:null };
+
+function resetClientForm(){
+  clientForm.reset();
+  clientForm.querySelectorAll('.field').forEach(f=>f.classList.remove('invalid'));
+  clientState = { source:null, config:null, booking:null, cp:null };
+  document.querySelectorAll('.toggle-tile').forEach(t=>t.classList.remove('selected'));
+  document.querySelectorAll('#configTiles .tile').forEach(t=>t.classList.remove('selected'));
+  document.querySelectorAll('#bookingTiles .tile').forEach(t=>t.classList.remove('selected'));
+  document.getElementById('cpDetails').classList.add('hidden');
+  document.getElementById('directDetails').classList.add('hidden');
+  document.getElementById('err_source').style.display='none';
+  document.getElementById('err_config').style.display='none';
+  document.getElementById('err_booking').style.display='none';
+  document.getElementById('err_cp_select').style.display='none';
+  clearCpSelection();
+  document.getElementById('cpSearch').value='';
+  document.getElementById('cpResults').classList.remove('show');
+  document.getElementById('cpEmpty').classList.remove('show');
+  document.getElementById('cpMiniForm').classList.remove('show');
+}
+
+// source toggle
+document.querySelectorAll('.toggle-tile').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.toggle-tile').forEach(x=>x.classList.remove('selected'));
+    t.classList.add('selected');
+    clientState.source = t.dataset.source;
+    document.getElementById('err_source').style.display='none';
+    if(clientState.source === 'channel_partner'){
+      document.getElementById('cpDetails').classList.remove('hidden');
+      document.getElementById('directDetails').classList.add('hidden');
+    } else {
+      document.getElementById('directDetails').classList.remove('hidden');
+      document.getElementById('cpDetails').classList.add('hidden');
+    }
+  });
+});
+
+// config tiles
+document.querySelectorAll('#configTiles .tile').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('#configTiles .tile').forEach(x=>x.classList.remove('selected'));
+    t.classList.add('selected');
+    clientState.config = t.dataset.config;
+    document.getElementById('err_config').style.display='none';
+  });
+});
+// booking tiles
+document.querySelectorAll('#bookingTiles .tile').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('#bookingTiles .tile').forEach(x=>x.classList.remove('selected'));
+    t.classList.add('selected');
+    clientState.booking = t.dataset.booking;
+    document.getElementById('err_booking').style.display='none';
+  });
+});
+
+// CP SEARCH
+const cpSearch = document.getElementById('cpSearch');
+const cpResults = document.getElementById('cpResults');
+const cpEmpty = document.getElementById('cpEmpty');
+cpSearch.addEventListener('input', ()=>{
+  const q = cpSearch.value.trim().toLowerCase();
+  document.getElementById('cpMiniForm').classList.remove('show');
+  if(q.length < 4){
+    cpResults.classList.remove('show');
+    cpEmpty.classList.remove('show');
+    cpResults.innerHTML='';
+    return;
+  }
+  const matches = getChannelPartners().filter(p =>
+    (p.name||'').toLowerCase().includes(q) || (p.phone||'').toLowerCase().includes(q)
+  );
+  if(matches.length){
+    cpResults.innerHTML = matches.map(p =>
+      `<div class="cp-result-row" data-id="${p.id}"><strong>${escapeHtml(p.name)}</strong> — ${escapeHtml(p.company||'—')} — ${escapeHtml(p.phone)}</div>`
+    ).join('');
+    cpResults.classList.add('show');
+    cpEmpty.classList.remove('show');
+    cpResults.querySelectorAll('.cp-result-row').forEach(row=>{
+      row.addEventListener('click', ()=>{
+        const p = getChannelPartners().find(x=>x.id===row.dataset.id);
+        selectCp(p);
+      });
+    });
+  } else {
+    cpResults.classList.remove('show');
+    cpResults.innerHTML='';
+    cpEmpty.classList.add('show');
+  }
+});
+
+document.getElementById('cpAddNewBtn').addEventListener('click', ()=>{
+  document.getElementById('cpMiniForm').classList.add('show');
+  document.getElementById('mini_name').value = '';
+  document.getElementById('mini_phone').value = '';
+  document.getElementById('mini_company').value = '';
+});
+document.getElementById('cpMiniSave').addEventListener('click', async ()=>{
+  const name = document.getElementById('mini_name').value.trim();
+  const phone = document.getElementById('mini_phone').value.trim();
+  const company = document.getElementById('mini_company').value.trim();
+  const errEl = document.getElementById('miniErr');
+  if(!name || !company || !phoneRe.test(phone)){ errEl.style.display='block'; return; }
+  errEl.style.display='none';
+  const id = 'TB-' + Date.now();
+  const cp = { id, type:'channel_partner', name, phone, company, notes:'', timestamp:new Date().toISOString(), createdAt:Date.now() };
+  const miniBtn = document.getElementById('cpMiniSave');
+  miniBtn.disabled=true;
+  try {
+    await saveRegistration(cp);
+    selectCp(cp);
+    document.getElementById('cpMiniForm').classList.remove('show');
+  } catch(err) {
+    alert('Failed to save channel partner. Please try again.');
+  } finally {
+    miniBtn.disabled=false;
+  }
+});
+
+function selectCp(p){
+  clientState.cp = p;
+  document.getElementById('cpChipName').textContent = p.name + ' — ' + (p.company||'') ;
+  document.getElementById('cpChip').classList.add('show');
+  cpResults.classList.remove('show');
+  cpEmpty.classList.remove('show');
+  cpSearch.value = '';
+  document.getElementById('err_cp_select').style.display='none';
+}
+function clearCpSelection(){
+  clientState.cp = null;
+  document.getElementById('cpChip').classList.remove('show');
+}
+document.getElementById('cpChipX').addEventListener('click', clearCpSelection);
+
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// CLIENT SUBMIT
+clientForm.addEventListener('submit', async e=>{
+  e.preventDefault();
+  let ok = true;
+  // source
+  if(!clientState.source){ document.getElementById('err_source').style.display='block'; ok=false; }
+  // CP selection if through partner
+  if(clientState.source === 'channel_partner' && !clientState.cp){
+    document.getElementById('err_cp_select').style.display='block'; ok=false;
+  }
+  // enquiry source if direct
+  let enquirySource = '';
+  if(clientState.source === 'direct'){
+    enquirySource = document.getElementById('enquirySource').value;
+    setInvalid(document.getElementById('f_enquiry'), !enquirySource); if(!enquirySource) ok=false;
+  } else {
+    setInvalid(document.getElementById('f_enquiry'), false);
+  }
+  // client details
+  const name = clientForm.name.value.trim();
+  const email = clientForm.email.value.trim();
+  const phone = clientForm.phone.value.trim();
+  const city = clientForm.city.value;
+  const aadhaar = clientForm.aadhaar.value.trim();
+  const notes = clientForm.notes.value.trim();
+  setInvalid(document.getElementById('f_name'), !name); if(!name) ok=false;
+  const emailBad = email && !emailRe.test(email);
+  setInvalid(document.getElementById('f_email'), emailBad); if(emailBad) ok=false;
+  setInvalid(document.getElementById('f_phone'), !phoneRe.test(phone)); if(!phoneRe.test(phone)) ok=false;
+  const aadhaarBad = aadhaar && !/^[0-9]{4}$/.test(aadhaar);
+  setInvalid(document.getElementById('f_aadhaar'), aadhaarBad); if(aadhaarBad) ok=false;
+  // config / booking
+  if(!clientState.config){ document.getElementById('err_config').style.display='block'; ok=false; }
+  if(!clientState.booking){ document.getElementById('err_booking').style.display='block'; ok=false; }
+
+  if(!ok){
+    const firstInvalid = clientForm.querySelector('.field.invalid');
+    const firstErr = [...clientForm.querySelectorAll('.err-msg')].find(el=>el.style.display==='block');
+    (firstInvalid || firstErr || clientForm).scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+
+  const id = 'TB-' + Date.now();
+  const clientSubmitBtn = clientForm.querySelector('button[type="submit"]');
+  clientSubmitBtn.disabled=true; clientSubmitBtn.textContent='Submitting…';
+  try {
+    await saveRegistration({
+      id, type:'client', name, email, phone, city, aadhaar,
+      source: clientState.source,
+      enquirySource: clientState.source==='direct' ? enquirySource : '',
+      channelPartnerId: clientState.cp ? clientState.cp.id : '',
+      channelPartnerName: clientState.cp ? clientState.cp.name : '',
+      configuration: clientState.config,
+      bookingTimeline: clientState.booking,
+      notes,
+      timestamp:new Date().toISOString(), createdAt:Date.now()
+    });
+    showSuccess(name, id);
+  } catch(err) {
+    alert('Failed to save registration. Please check your connection and try again.');
+    clientSubmitBtn.disabled=false; clientSubmitBtn.textContent='Submit Registration';
+  }
+});
+
+/* ===================== SUCCESS ===================== */
+function showSuccess(name, id){
+  document.getElementById('successName').textContent = name;
+  document.getElementById('successId').textContent = id;
+  showScreen('success');
+}
+document.getElementById('registerAnother').addEventListener('click', ()=>{
+  selectedType = null;
+  document.querySelectorAll('.opt-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('modalContinue').disabled = true;
+  showScreen('landing');
+  typeModal.classList.add('active');
+});
+document.getElementById('returnHome').addEventListener('click', goHome);
+
+/* ===================== STARTUP ===================== */
+(async function(){
+  await initData();
+  initStats();
+})();
+</script>
+</body>
+</html>
