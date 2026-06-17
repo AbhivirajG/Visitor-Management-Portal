@@ -314,11 +314,46 @@ textarea{resize:vertical;min-height:84px}
         <input type="text" name="company" autocomplete="off">
         <div class="err-msg">Please enter the company name.</div>
       </div>
-      <div class="field">
-        <label>Notes (Optional)</label>
-        <textarea name="notes" rows="3"></textarea>
+      <div class="field" id="f_cp_email">
+        <label>Channel Partner Email <span class="req">*</span></label>
+        <input type="email" name="cp_email" autocomplete="off">
+        <div class="err-msg">Please enter a valid email address.</div>
       </div>
-      <button type="submit" class="btn-gold" style="width:100%;height:50px">Submit &amp; Verify →</button>
+      <div class="field" id="f_cp_client_name">
+        <label>Client Name <span class="req">*</span></label>
+        <input type="text" name="client_name" autocomplete="off">
+        <div class="err-msg">Please enter the client name.</div>
+      </div>
+      <div class="field" id="f_cp_line_of_work">
+        <label>Line of Work <span class="req">*</span></label>
+        <input type="text" name="line_of_work" autocomplete="off" placeholder="e.g. Finance, Real Estate, Healthcare…">
+        <div class="err-msg">Please enter the client's line of work.</div>
+      </div>
+      <div class="field" id="f_cp_region">
+        <label>Client Region <span class="req">*</span></label>
+        <input type="text" name="cp_region" autocomplete="off" placeholder="e.g. Satellite, SG Highway, Prahlad Nagar…">
+        <div class="err-msg">Please enter the client's region.</div>
+      </div>
+      <div style="margin-top:28px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--bg-dark);margin-bottom:6px;padding-top:24px;border-top:1px solid rgba(201,164,98,0.4);">Configuration Interested In <span class="req">*</span></div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">You can select more than one</div>
+        <div class="tile-row" id="cpConfigTiles">
+          <div class="tile" data-config="4bhk">4 BHK</div>
+          <div class="tile" data-config="5bhk_traditional">5 BHK Traditional</div>
+          <div class="tile" data-config="5bhk_modern">5 BHK Modern</div>
+          <div class="tile" data-config="6bhk">6 BHK</div>
+        </div>
+        <div class="err-msg" id="err_cp_config" style="margin-top:8px">Please select a configuration.</div>
+      </div>
+      <div style="margin-top:24px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--bg-dark);margin-bottom:16px;padding-top:24px;border-top:1px solid rgba(201,164,98,0.4);">Interested For <span class="req">*</span></div>
+        <div class="toggle-row" id="cpInterestedTiles">
+          <div class="tile toggle-tile" data-interest="sale">Sale</div>
+          <div class="tile toggle-tile" data-interest="lease">Lease</div>
+        </div>
+        <div class="err-msg" id="err_cp_interest" style="margin-top:8px">Please select sale or lease.</div>
+      </div>
+      <button type="submit" class="btn-gold" style="width:100%;height:50px;margin-top:28px">Submit &amp; Verify →</button>
     </form>
   </div>
 </div>
@@ -336,53 +371,18 @@ textarea{resize:vertical;min-height:84px}
 
       <!-- How did you hear -->
       <div class="section first">
-        <div class="section-label">How did you hear about us?</div>
-        <div class="toggle-row">
-          <div class="tile toggle-tile" data-source="channel_partner">Through Channel Partner</div>
-          <div class="tile toggle-tile" data-source="direct">Direct Enquiry</div>
+        <div class="section-label">Where did you hear about the project? <span class="req">*</span></div>
+        <div class="tile-row" id="enquiryTiles">
+          <div class="tile" data-enquiry="direct">Direct / Walk-In</div>
+          <div class="tile" data-enquiry="social_media">Social Media</div>
+          <div class="tile" data-enquiry="google_ads">Google Ads</div>
+          <div class="tile" data-enquiry="youtube">YouTube</div>
+          <div class="tile" data-enquiry="newspaper">Newspaper / Print</div>
+          <div class="tile" data-enquiry="hoarding">Hoarding / Billboard</div>
+          <div class="tile" data-enquiry="reference">Reference / Word of Mouth</div>
+          <div class="tile" data-enquiry="others">Others</div>
         </div>
-        <div class="err-msg" id="err_source" style="margin-top:8px">Please select how you heard about us.</div>
-
-        <!-- CP details -->
-        <div id="cpDetails" class="hidden" style="margin-top:18px">
-          <label style="display:block;font-size:13px;font-weight:500;margin-bottom:8px">Channel Partner Details</label>
-          <input type="text" id="cpSearch" placeholder="Search by name or phone (min. 4 characters)" autocomplete="off">
-          <div class="cp-results" id="cpResults"></div>
-          <div class="cp-empty" id="cpEmpty">
-            <div style="margin-bottom:12px">No channel partner found</div>
-            <button type="button" class="btn-outline" id="cpAddNewBtn">+ Add New Channel Partner</button>
-          </div>
-          <div class="cp-miniform" id="cpMiniForm">
-            <div class="field" style="margin-bottom:12px"><label>Name <span class="req">*</span></label><input type="text" id="mini_name" autocomplete="off"></div>
-            <div class="field" style="margin-bottom:12px"><label>Phone <span class="req">*</span></label><input type="tel" id="mini_phone" maxlength="10" autocomplete="off"></div>
-            <div class="field" style="margin-bottom:12px"><label>Company <span class="req">*</span></label><input type="text" id="mini_company" autocomplete="off"></div>
-            <div id="miniErr" style="color:var(--error);font-size:12px;margin-bottom:10px;display:none">All fields are required; phone must be 10 digits.</div>
-            <button type="button" class="btn-gold" id="cpMiniSave" style="padding:10px 22px">Add &amp; Select</button>
-          </div>
-          <div class="cp-chip" id="cpChip">
-            <span id="cpChipName"></span><span style="color:var(--gold)">✓</span>
-            <span class="x" id="cpChipX">×</span>
-          </div>
-          <div class="err-msg" id="err_cp_select" style="margin-top:8px">Please select or add a channel partner.</div>
-        </div>
-
-        <!-- Direct source -->
-        <div id="directDetails" class="hidden" style="margin-top:18px">
-          <div class="field" id="f_enquiry">
-            <label>Source of Enquiry <span class="req">*</span></label>
-            <select id="enquirySource">
-              <option value="">Select source</option>
-              <option value="newspaper">Newspaper</option>
-              <option value="digital">Digital</option>
-              <option value="online">Online</option>
-              <option value="hoarding">Hoarding</option>
-              <option value="billboard">Billboard</option>
-              <option value="reference">Reference</option>
-              <option value="others">Others</option>
-            </select>
-            <div class="err-msg">Please select a source of enquiry.</div>
-          </div>
-        </div>
+        <div class="err-msg" id="err_enquiry" style="margin-top:8px">Please select a source.</div>
       </div>
 
       <!-- Client Details -->
@@ -395,7 +395,7 @@ textarea{resize:vertical;min-height:84px}
             <div class="err-msg">Please enter the full name.</div>
           </div>
           <div class="field" id="f_email">
-            <label>Email</label>
+            <label>Email <span class="req">*</span></label>
             <input type="email" name="email" autocomplete="off">
             <div class="err-msg">Please enter a valid email address.</div>
           </div>
@@ -404,18 +404,13 @@ textarea{resize:vertical;min-height:84px}
             <input type="tel" name="phone" maxlength="10" autocomplete="off">
             <div class="err-msg">Enter a valid 10-digit mobile number.</div>
           </div>
-          <div class="field" id="f_city">
-            <label>City</label>
-            <select name="city">
-              <option value="">Select city</option>
-              <option>Delhi</option><option>Gurugram</option><option>Noida</option>
-              <option>Faridabad</option><option>Gurgaon</option><option>Manesar</option><option>Other</option>
-            </select>
+          <div class="field" id="f_region">
+            <label>Region</label>
+            <input type="text" name="region" autocomplete="off" placeholder="e.g. Satellite, SG Highway, Prahlad Nagar…">
           </div>
-          <div class="field" id="f_aadhaar">
-            <label>Aadhaar Last 4 Digits (optional)</label>
-            <input type="text" name="aadhaar" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" autocomplete="off">
-            <div class="err-msg">Enter exactly 4 digits.</div>
+          <div class="field" id="f_line_of_work">
+            <label>Line of Work</label>
+            <input type="text" name="line_of_work" autocomplete="off" placeholder="e.g. Finance, Real Estate, Healthcare…">
           </div>
         </div>
       </div>
@@ -423,31 +418,24 @@ textarea{resize:vertical;min-height:84px}
       <!-- Configuration -->
       <div class="section">
         <div class="section-label">Configuration Interested In <span class="req">*</span></div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px;margin-top:-8px">You can select more than one</div>
         <div class="tile-row" id="configTiles">
           <div class="tile" data-config="4bhk">4 BHK</div>
-          <div class="tile" data-config="5bhk">5 BHK</div>
+          <div class="tile" data-config="5bhk_traditional">5 BHK Traditional</div>
+          <div class="tile" data-config="5bhk_modern">5 BHK Modern</div>
           <div class="tile" data-config="6bhk">6 BHK</div>
-          <div class="tile" data-config="lease">Lease</div>
-          <div class="tile" data-config="any">Any</div>
         </div>
         <div class="err-msg" id="err_config" style="margin-top:8px">Please select a configuration.</div>
       </div>
 
-      <!-- Booking -->
+      <!-- Interested For -->
       <div class="section">
-        <div class="section-label">When do you want to book? <span class="req">*</span></div>
-        <div class="tile-row" id="bookingTiles">
-          <div class="tile" data-booking="immediate">Immediate</div>
-          <div class="tile" data-booking="2months">Within 2 Months</div>
-          <div class="tile" data-booking="3months">Within 3 Months</div>
+        <div class="section-label">Interested For <span class="req">*</span></div>
+        <div class="toggle-row" id="interestedTiles">
+          <div class="tile toggle-tile" data-interest="sale">Sale</div>
+          <div class="tile toggle-tile" data-interest="lease">Lease</div>
         </div>
-        <div class="err-msg" id="err_booking" style="margin-top:8px">Please select a booking timeline.</div>
-      </div>
-
-      <!-- Notes -->
-      <div class="section">
-        <div class="section-label">Additional Notes</div>
-        <textarea name="notes" rows="3" placeholder="Any remarks, preferences, follow-up details..."></textarea>
+        <div class="err-msg" id="err_interest" style="margin-top:8px">Please select sale or lease.</div>
       </div>
 
       <button type="submit" class="btn-gold" style="width:100%;height:50px;margin-top:28px">Submit Registration</button>
@@ -610,26 +598,62 @@ function scrollToFirstError(container){
 
 /* ===================== CHANNEL PARTNER FORM ===================== */
 const cpForm = document.getElementById('cpForm');
+let cpState = { config: [], interestedFor: null };
+
+document.querySelectorAll('#cpConfigTiles .tile').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    t.classList.toggle('selected');
+    const val = t.dataset.config;
+    if(t.classList.contains('selected')){ cpState.config.push(val); }
+    else { cpState.config = cpState.config.filter(v=>v!==val); }
+    if(cpState.config.length) document.getElementById('err_cp_config').style.display='none';
+  });
+});
+
+document.querySelectorAll('#cpInterestedTiles .toggle-tile').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('#cpInterestedTiles .toggle-tile').forEach(x=>x.classList.remove('selected'));
+    t.classList.add('selected');
+    cpState.interestedFor = t.dataset.interest;
+    document.getElementById('err_cp_interest').style.display='none';
+  });
+});
+
 function resetCpForm(){
   cpForm.reset();
   cpForm.querySelectorAll('.field').forEach(f=>f.classList.remove('invalid'));
+  cpState = { config: [], interestedFor: null };
+  document.querySelectorAll('#cpConfigTiles .tile').forEach(t=>t.classList.remove('selected'));
+  document.querySelectorAll('#cpInterestedTiles .toggle-tile').forEach(t=>t.classList.remove('selected'));
+  document.getElementById('err_cp_config').style.display='none';
+  document.getElementById('err_cp_interest').style.display='none';
 }
 cpForm.addEventListener('submit', async e=>{
   e.preventDefault();
   const name = cpForm.name.value.trim();
   const phone = cpForm.phone.value.trim();
   const company = cpForm.company.value.trim();
-  const notes = cpForm.notes.value.trim();
+  const cp_email = cpForm.cp_email.value.trim();
+  const client_name = cpForm.client_name.value.trim();
+  const line_of_work = cpForm.line_of_work.value.trim();
+  const cp_region = cpForm.cp_region.value;
   let ok = true;
   setInvalid(document.getElementById('f_cp_name'), !name); if(!name) ok=false;
   setInvalid(document.getElementById('f_cp_phone'), !phoneRe.test(phone)); if(!phoneRe.test(phone)) ok=false;
   setInvalid(document.getElementById('f_cp_company'), !company); if(!company) ok=false;
+  const cpEmailBad = !cp_email || !emailRe.test(cp_email);
+  setInvalid(document.getElementById('f_cp_email'), cpEmailBad); if(cpEmailBad) ok=false;
+  setInvalid(document.getElementById('f_cp_client_name'), !client_name); if(!client_name) ok=false;
+  setInvalid(document.getElementById('f_cp_line_of_work'), !line_of_work); if(!line_of_work) ok=false;
+  setInvalid(document.getElementById('f_cp_region'), !cp_region); if(!cp_region) ok=false;
+  if(!cpState.config.length){ document.getElementById('err_cp_config').style.display='block'; ok=false; }
+  if(!cpState.interestedFor){ document.getElementById('err_cp_interest').style.display='block'; ok=false; }
   if(!ok){ scrollToFirstError(cpForm); return; }
   const id = 'TB-' + Date.now();
   const cpSubmitBtn = cpForm.querySelector('button[type="submit"]');
   cpSubmitBtn.disabled=true; cpSubmitBtn.textContent='Saving…';
   try {
-    await saveRegistration({ id, type:'channel_partner', name, phone, company, notes, timestamp:new Date().toISOString(), createdAt:Date.now() });
+    await saveRegistration({ id, type:'channel_partner', name, phone, company, cp_email, client_name, line_of_work, cp_region, configuration: cpState.config, interestedFor: cpState.interestedFor, timestamp:new Date().toISOString(), createdAt:Date.now() });
     showSuccess(name, id);
   } catch(err) {
     alert('Failed to save. Please check your connection and try again.');
@@ -639,141 +663,47 @@ cpForm.addEventListener('submit', async e=>{
 
 /* ===================== CLIENT FORM ===================== */
 const clientForm = document.getElementById('clientForm');
-let clientState = { source:null, config:null, booking:null, cp:null };
+let clientState = { enquiry:null, config:[], interestedFor:null };
 
 function resetClientForm(){
   clientForm.reset();
   clientForm.querySelectorAll('.field').forEach(f=>f.classList.remove('invalid'));
-  clientState = { source:null, config:null, booking:null, cp:null };
-  document.querySelectorAll('.toggle-tile').forEach(t=>t.classList.remove('selected'));
-  document.querySelectorAll('#configTiles .tile').forEach(t=>t.classList.remove('selected'));
-  document.querySelectorAll('#bookingTiles .tile').forEach(t=>t.classList.remove('selected'));
-  document.getElementById('cpDetails').classList.add('hidden');
-  document.getElementById('directDetails').classList.add('hidden');
-  document.getElementById('err_source').style.display='none';
+  clientState = { enquiry:null, config:[], interestedFor:null };
+  document.querySelectorAll('#enquiryTiles .tile, #configTiles .tile, #interestedTiles .toggle-tile').forEach(t=>t.classList.remove('selected'));
+  document.getElementById('err_enquiry').style.display='none';
   document.getElementById('err_config').style.display='none';
-  document.getElementById('err_booking').style.display='none';
-  document.getElementById('err_cp_select').style.display='none';
-  clearCpSelection();
-  document.getElementById('cpSearch').value='';
-  document.getElementById('cpResults').classList.remove('show');
-  document.getElementById('cpEmpty').classList.remove('show');
-  document.getElementById('cpMiniForm').classList.remove('show');
+  document.getElementById('err_interest').style.display='none';
 }
 
-// source toggle
-document.querySelectorAll('.toggle-tile').forEach(t=>{
+// enquiry source tiles
+document.querySelectorAll('#enquiryTiles .tile').forEach(t=>{
   t.addEventListener('click', ()=>{
-    document.querySelectorAll('.toggle-tile').forEach(x=>x.classList.remove('selected'));
+    document.querySelectorAll('#enquiryTiles .tile').forEach(x=>x.classList.remove('selected'));
     t.classList.add('selected');
-    clientState.source = t.dataset.source;
-    document.getElementById('err_source').style.display='none';
-    if(clientState.source === 'channel_partner'){
-      document.getElementById('cpDetails').classList.remove('hidden');
-      document.getElementById('directDetails').classList.add('hidden');
-    } else {
-      document.getElementById('directDetails').classList.remove('hidden');
-      document.getElementById('cpDetails').classList.add('hidden');
-    }
+    clientState.enquiry = t.dataset.enquiry;
+    document.getElementById('err_enquiry').style.display='none';
   });
 });
-
 // config tiles
 document.querySelectorAll('#configTiles .tile').forEach(t=>{
   t.addEventListener('click', ()=>{
-    document.querySelectorAll('#configTiles .tile').forEach(x=>x.classList.remove('selected'));
-    t.classList.add('selected');
-    clientState.config = t.dataset.config;
-    document.getElementById('err_config').style.display='none';
+    t.classList.toggle('selected');
+    const val = t.dataset.config;
+    if(t.classList.contains('selected')){ clientState.config.push(val); }
+    else { clientState.config = clientState.config.filter(v=>v!==val); }
+    if(clientState.config.length) document.getElementById('err_config').style.display='none';
   });
 });
-// booking tiles
-document.querySelectorAll('#bookingTiles .tile').forEach(t=>{
+// interested for tiles
+document.querySelectorAll('#interestedTiles .toggle-tile').forEach(t=>{
   t.addEventListener('click', ()=>{
-    document.querySelectorAll('#bookingTiles .tile').forEach(x=>x.classList.remove('selected'));
+    document.querySelectorAll('#interestedTiles .toggle-tile').forEach(x=>x.classList.remove('selected'));
     t.classList.add('selected');
-    clientState.booking = t.dataset.booking;
-    document.getElementById('err_booking').style.display='none';
+    clientState.interestedFor = t.dataset.interest;
+    document.getElementById('err_interest').style.display='none';
   });
 });
 
-// CP SEARCH
-const cpSearch = document.getElementById('cpSearch');
-const cpResults = document.getElementById('cpResults');
-const cpEmpty = document.getElementById('cpEmpty');
-cpSearch.addEventListener('input', ()=>{
-  const q = cpSearch.value.trim().toLowerCase();
-  document.getElementById('cpMiniForm').classList.remove('show');
-  if(q.length < 4){
-    cpResults.classList.remove('show');
-    cpEmpty.classList.remove('show');
-    cpResults.innerHTML='';
-    return;
-  }
-  const matches = getChannelPartners().filter(p =>
-    (p.name||'').toLowerCase().includes(q) || (p.phone||'').toLowerCase().includes(q)
-  );
-  if(matches.length){
-    cpResults.innerHTML = matches.map(p =>
-      `<div class="cp-result-row" data-id="${p.id}"><strong>${escapeHtml(p.name)}</strong> — ${escapeHtml(p.company||'—')} — ${escapeHtml(p.phone)}</div>`
-    ).join('');
-    cpResults.classList.add('show');
-    cpEmpty.classList.remove('show');
-    cpResults.querySelectorAll('.cp-result-row').forEach(row=>{
-      row.addEventListener('click', ()=>{
-        const p = getChannelPartners().find(x=>x.id===row.dataset.id);
-        selectCp(p);
-      });
-    });
-  } else {
-    cpResults.classList.remove('show');
-    cpResults.innerHTML='';
-    cpEmpty.classList.add('show');
-  }
-});
-
-document.getElementById('cpAddNewBtn').addEventListener('click', ()=>{
-  document.getElementById('cpMiniForm').classList.add('show');
-  document.getElementById('mini_name').value = '';
-  document.getElementById('mini_phone').value = '';
-  document.getElementById('mini_company').value = '';
-});
-document.getElementById('cpMiniSave').addEventListener('click', async ()=>{
-  const name = document.getElementById('mini_name').value.trim();
-  const phone = document.getElementById('mini_phone').value.trim();
-  const company = document.getElementById('mini_company').value.trim();
-  const errEl = document.getElementById('miniErr');
-  if(!name || !company || !phoneRe.test(phone)){ errEl.style.display='block'; return; }
-  errEl.style.display='none';
-  const id = 'TB-' + Date.now();
-  const cp = { id, type:'channel_partner', name, phone, company, notes:'', timestamp:new Date().toISOString(), createdAt:Date.now() };
-  const miniBtn = document.getElementById('cpMiniSave');
-  miniBtn.disabled=true;
-  try {
-    await saveRegistration(cp);
-    selectCp(cp);
-    document.getElementById('cpMiniForm').classList.remove('show');
-  } catch(err) {
-    alert('Failed to save channel partner. Please try again.');
-  } finally {
-    miniBtn.disabled=false;
-  }
-});
-
-function selectCp(p){
-  clientState.cp = p;
-  document.getElementById('cpChipName').textContent = p.name + ' — ' + (p.company||'') ;
-  document.getElementById('cpChip').classList.add('show');
-  cpResults.classList.remove('show');
-  cpEmpty.classList.remove('show');
-  cpSearch.value = '';
-  document.getElementById('err_cp_select').style.display='none';
-}
-function clearCpSelection(){
-  clientState.cp = null;
-  document.getElementById('cpChip').classList.remove('show');
-}
-document.getElementById('cpChipX').addEventListener('click', clearCpSelection);
 
 function escapeHtml(s){
   return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -783,36 +713,22 @@ function escapeHtml(s){
 clientForm.addEventListener('submit', async e=>{
   e.preventDefault();
   let ok = true;
-  // source
-  if(!clientState.source){ document.getElementById('err_source').style.display='block'; ok=false; }
-  // CP selection if through partner
-  if(clientState.source === 'channel_partner' && !clientState.cp){
-    document.getElementById('err_cp_select').style.display='block'; ok=false;
-  }
-  // enquiry source if direct
-  let enquirySource = '';
-  if(clientState.source === 'direct'){
-    enquirySource = document.getElementById('enquirySource').value;
-    setInvalid(document.getElementById('f_enquiry'), !enquirySource); if(!enquirySource) ok=false;
-  } else {
-    setInvalid(document.getElementById('f_enquiry'), false);
-  }
+  // enquiry source
+  if(!clientState.enquiry){ document.getElementById('err_enquiry').style.display='block'; ok=false; }
+  else { document.getElementById('err_enquiry').style.display='none'; }
   // client details
   const name = clientForm.name.value.trim();
   const email = clientForm.email.value.trim();
   const phone = clientForm.phone.value.trim();
-  const city = clientForm.city.value;
-  const aadhaar = clientForm.aadhaar.value.trim();
-  const notes = clientForm.notes.value.trim();
+  const region = clientForm.region.value;
+  const line_of_work = clientForm.line_of_work.value.trim();
   setInvalid(document.getElementById('f_name'), !name); if(!name) ok=false;
-  const emailBad = email && !emailRe.test(email);
+  const emailBad = !email || !emailRe.test(email);
   setInvalid(document.getElementById('f_email'), emailBad); if(emailBad) ok=false;
   setInvalid(document.getElementById('f_phone'), !phoneRe.test(phone)); if(!phoneRe.test(phone)) ok=false;
-  const aadhaarBad = aadhaar && !/^[0-9]{4}$/.test(aadhaar);
-  setInvalid(document.getElementById('f_aadhaar'), aadhaarBad); if(aadhaarBad) ok=false;
   // config / booking
-  if(!clientState.config){ document.getElementById('err_config').style.display='block'; ok=false; }
-  if(!clientState.booking){ document.getElementById('err_booking').style.display='block'; ok=false; }
+  if(!clientState.config.length){ document.getElementById('err_config').style.display='block'; ok=false; }
+  if(!clientState.interestedFor){ document.getElementById('err_interest').style.display='block'; ok=false; }
 
   if(!ok){
     const firstInvalid = clientForm.querySelector('.field.invalid');
@@ -822,18 +738,23 @@ clientForm.addEventListener('submit', async e=>{
   }
 
   const id = 'TB-' + Date.now();
+  const nameLower = name.toLowerCase();
+  const isRevisit = getRegistrations().some(r =>
+    r.type === 'client' &&
+    (r.name||'').toLowerCase() === nameLower &&
+    (r.phone||'') === phone
+  );
+  const visitType = isRevisit ? 'revisit' : 'new';
   const clientSubmitBtn = clientForm.querySelector('button[type="submit"]');
   clientSubmitBtn.disabled=true; clientSubmitBtn.textContent='Submitting…';
   try {
     await saveRegistration({
-      id, type:'client', name, email, phone, city, aadhaar,
-      source: clientState.source,
-      enquirySource: clientState.source==='direct' ? enquirySource : '',
-      channelPartnerId: clientState.cp ? clientState.cp.id : '',
-      channelPartnerName: clientState.cp ? clientState.cp.name : '',
+      id, type:'client', name, email, phone, region, line_of_work,
+      source: 'direct',
+      enquirySource: clientState.enquiry,
       configuration: clientState.config,
-      bookingTimeline: clientState.booking,
-      notes,
+      interestedFor: clientState.interestedFor,
+      visitType,
       timestamp:new Date().toISOString(), createdAt:Date.now()
     });
     showSuccess(name, id);

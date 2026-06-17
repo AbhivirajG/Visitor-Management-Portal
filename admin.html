@@ -82,7 +82,7 @@ body{font-family:'Inter',sans-serif;background:var(--main-bg);color:var(--bg-dar
 .tab-panel.active{display:block}
 
 /* ===== STAT CARDS ===== */
-.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:36px}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:36px}
 .stat-card{background:var(--white);border-radius:12px;padding:24px;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
 .stat-card .num{font-family:'Cormorant Garamond',serif;font-size:40px;color:var(--gold);line-height:1}
 .stat-card .lbl{font-size:12px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-top:10px}
@@ -208,6 +208,8 @@ tbody tr:hover{background:rgba(201,164,98,0.04)}
         <div class="stat-card"><div class="num" id="statCp">0</div><div class="lbl">Channel Partners</div></div>
         <div class="stat-card"><div class="num" id="statClients">0</div><div class="lbl">Clients</div></div>
         <div class="stat-card"><div class="num" id="statToday">0</div><div class="lbl">Today's Entries</div></div>
+        <div class="stat-card"><div class="num" id="statNew">0</div><div class="lbl">New Visitors</div></div>
+        <div class="stat-card"><div class="num" id="statRevisit">0</div><div class="lbl">Revisits</div></div>
       </div>
       <div class="section-head">
         <span class="section-title">Recent Activity</span>
@@ -235,9 +237,9 @@ tbody tr:hover{background:rgba(201,164,98,0.04)}
           <span class="filter-grp-label">Config</span>
           <div class="fpill active" data-config="all">All</div>
           <div class="fpill" data-config="4bhk">4 BHK</div>
-          <div class="fpill" data-config="5bhk">5 BHK</div>
+          <div class="fpill" data-config="5bhk_traditional">5 BHK Traditional</div>
+          <div class="fpill" data-config="5bhk_modern">5 BHK Modern</div>
           <div class="fpill" data-config="6bhk">6 BHK</div>
-          <div class="fpill" data-config="lease">Lease</div>
         </div>
         <button class="btn-outline right" id="allExportBtn">Export CSV</button>
       </div>
@@ -269,9 +271,15 @@ tbody tr:hover{background:rgba(201,164,98,0.04)}
           <span class="filter-grp-label">Config</span>
           <div class="fpill active" data-config="all">All</div>
           <div class="fpill" data-config="4bhk">4 BHK</div>
-          <div class="fpill" data-config="5bhk">5 BHK</div>
+          <div class="fpill" data-config="5bhk_traditional">5 BHK Traditional</div>
+          <div class="fpill" data-config="5bhk_modern">5 BHK Modern</div>
           <div class="fpill" data-config="6bhk">6 BHK</div>
-          <div class="fpill" data-config="lease">Lease</div>
+        </div>
+        <div class="pill-group" id="clientVisitFilter">
+          <span class="filter-grp-label">Visit</span>
+          <div class="fpill active" data-visit="all">All</div>
+          <div class="fpill" data-visit="new">New</div>
+          <div class="fpill" data-visit="revisit">Revisit</div>
         </div>
         <button class="btn-outline right" id="clientExportBtn">Export CSV</button>
       </div>
@@ -338,22 +346,25 @@ async function initData(){
 function getRegistrations(){ return _cache; }
 
 /* ===================== LABELS ===================== */
-const CONFIG_LABELS = {'4bhk':'4 BHK','5bhk':'5 BHK','6bhk':'6 BHK','lease':'Lease','any':'Any'};
-const BOOKING_LABELS = {'immediate':'Immediate','2months':'Within 2 Months','3months':'Within 3 Months'};
-const ENQUIRY_LABELS = {newspaper:'Newspaper',digital:'Digital',online:'Online',hoarding:'Hoarding',billboard:'Billboard',reference:'Reference',others:'Others'};
+const CONFIG_LABELS = {'4bhk':'4 BHK','5bhk_traditional':'5 BHK Traditional','5bhk_modern':'5 BHK Modern','6bhk':'6 BHK'};
+const ENQUIRY_LABELS = {direct:'Direct / Walk-In',social_media:'Social Media',google_ads:'Google Ads',youtube:'YouTube',newspaper:'Newspaper / Print',hoarding:'Hoarding / Billboard',reference:'Reference / Word of Mouth',others:'Others'};
 
 function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function fmtDate(iso){ if(!iso) return '—'; const d=new Date(iso); return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true}); }
 function isToday(iso){ if(!iso) return false; const d=new Date(iso); const n=new Date(); return d.toDateString()===n.toDateString(); }
-function sourceLabel(r){
-  if(r.source==='channel_partner') return 'CP: ' + (r.channelPartnerName||'—');
-  if(r.source==='direct') return 'Direct: ' + (ENQUIRY_LABELS[r.enquirySource]||r.enquirySource||'—');
-  return '—';
+function fmtConfig(c){
+  if(!c) return '—';
+  const arr = Array.isArray(c) ? c : [c];
+  return arr.map(v=>CONFIG_LABELS[v]||v).join(', ') || '—';
 }
 function typeBadge(t){
   return t==='channel_partner'
     ? '<span class="badge badge-cp">Channel Partner</span>'
     : '<span class="badge badge-client">Client</span>';
+}
+function visitBadge(v){
+  if(v==='revisit') return '<span class="badge" style="background:rgba(201,164,98,0.2);color:#8a6d2f">Revisit</span>';
+  return '<span class="badge" style="background:rgba(63,174,90,0.15);color:#2d7a3a">New</span>';
 }
 
 /* ===================== AUTH ===================== */
@@ -410,23 +421,27 @@ function renderAll(){
 /* ===================== DASHBOARD ===================== */
 function renderDashboard(){
   const regs = getRegistrations();
+  const clients = regs.filter(r=>r.type==='client');
   document.getElementById('statTotal').textContent = regs.length;
   document.getElementById('statCp').textContent = regs.filter(r=>r.type==='channel_partner').length;
-  document.getElementById('statClients').textContent = regs.filter(r=>r.type==='client').length;
+  document.getElementById('statClients').textContent = clients.length;
   document.getElementById('statToday').textContent = regs.filter(r=>isToday(r.timestamp)).length;
+  document.getElementById('statNew').textContent = clients.filter(r=>r.visitType==='new'||!r.visitType).length;
+  document.getElementById('statRevisit').textContent = clients.filter(r=>r.visitType==='revisit').length;
   document.getElementById('refreshMeta').textContent = 'Last refreshed: ' + new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',second:'2-digit',hour12:true});
 
   const recent = [...regs].sort((a,b)=>b.createdAt-a.createdAt).slice(0,10);
   const block = document.getElementById('recentBlock');
   if(!recent.length){ block.innerHTML = emptyState('No registrations yet'); return; }
   block.innerHTML = `<table><thead><tr>
-    <th>#</th><th>Name</th><th>Type</th><th>Phone</th><th>Config</th><th>Date</th>
+    <th>#</th><th>Name</th><th>Type</th><th>Phone</th><th>Config</th><th>Visit</th><th>Date</th>
   </tr></thead><tbody>${recent.map(r=>`<tr>
     <td style="font-family:monospace;color:var(--muted)">${escapeHtml(r.id)}</td>
     <td>${escapeHtml(r.name)}</td>
     <td>${typeBadge(r.type)}</td>
     <td>${escapeHtml(r.phone)}</td>
-    <td>${r.type==='client'?(CONFIG_LABELS[r.configuration]||'—'):'—'}</td>
+    <td>${r.type==='client'?fmtConfig(r.configuration):'—'}</td>
+    <td>${r.type==='client'?visitBadge(r.visitType):'—'}</td>
     <td>${fmtDate(r.timestamp)}</td>
   </tr>`).join('')}</tbody></table>`;
 }
@@ -463,26 +478,28 @@ document.getElementById('allSearch').addEventListener('input', renderAllTable);
 function filterRows(regs, q){
   if(!q) return regs;
   q=q.toLowerCase();
-  return regs.filter(r=>[r.name,r.phone,r.company,r.city,r.email,r.channelPartnerName].some(v=>(v||'').toLowerCase().includes(q)));
+  return regs.filter(r=>[r.name,r.phone,r.company,r.region,r.cp_region,r.email,r.client_name,r.line_of_work].some(v=>(v||'').toLowerCase().includes(q)));
+}
+function matchesConfig(r, configF){
+  if(configF==='all') return true;
+  if(!r.configuration) return false;
+  return Array.isArray(r.configuration) ? r.configuration.includes(configF) : r.configuration===configF;
 }
 function renderAllTable(){
   let regs = getRegistrations();
   if(allTypeF!=='all') regs=regs.filter(r=>r.type===allTypeF);
-  if(allConfigF!=='all') regs=regs.filter(r=>r.configuration===allConfigF);
+  if(allConfigF!=='all') regs=regs.filter(r=>matchesConfig(r,allConfigF));
   regs = filterRows(regs, document.getElementById('allSearch').value.trim());
   regs = sortRows(regs, sortState.all);
   const block = document.getElementById('allBlock');
   if(!regs.length){ block.innerHTML=emptyState('No registrations found'); return; }
-  const cols=[['id','#'],['name','Name'],['type','Type'],['phone','Phone'],['city','City'],['configuration','Config'],['source','Source'],['bookingTimeline','Booking'],['createdAt','Date/Time'],['','Actions']];
+  const cols=[['id','#'],['name','Name'],['type','Type'],['phone','Phone'],['configuration','Config'],['createdAt','Date/Time'],['','Actions']];
   block.innerHTML=`<table><thead><tr>${cols.map(c=>c[0]?`<th class="sortable" data-sort="${c[0]}" data-tbl="all">${c[1]}${sortArrow('all',c[0])}</th>`:`<th>${c[1]}</th>`).join('')}</tr></thead><tbody>${regs.map(r=>`<tr>
     <td style="font-family:monospace;color:var(--muted)">${escapeHtml(r.id)}</td>
     <td>${escapeHtml(r.name)}</td>
     <td>${typeBadge(r.type)}</td>
     <td>${escapeHtml(r.phone)}</td>
-    <td>${escapeHtml(r.city||'—')}</td>
-    <td>${r.type==='client'?(CONFIG_LABELS[r.configuration]||'—'):'—'}</td>
-    <td>${r.type==='client'?escapeHtml(sourceLabel(r)):'—'}</td>
-    <td>${r.type==='client'?(BOOKING_LABELS[r.bookingTimeline]||'—'):'—'}</td>
+    <td>${fmtConfig(r.configuration)}</td>
     <td>${fmtDate(r.timestamp)}</td>
     <td><button class="eye-btn" data-view="${escapeHtml(r.id)}">👁 View</button></td>
   </tr>`).join('')}</tbody></table>`;
@@ -497,13 +514,15 @@ function renderCpTable(){
   regs = sortRows(regs, sortState.cp);
   const block=document.getElementById('cpBlock');
   if(!regs.length){ block.innerHTML=emptyState('No channel partners found'); return; }
-  const cols=[['id','#'],['name','Name'],['phone','Phone'],['company','Company'],['notes','Notes'],['createdAt','Date Registered'],['','Actions']];
+  const cols=[['id','#'],['name','CP Name'],['phone','Phone'],['company','Company'],['client_name','Client Name'],['cp_region','Region'],['configuration','Config'],['createdAt','Date Registered'],['','Actions']];
   block.innerHTML=`<table><thead><tr>${cols.map(c=>c[0]?`<th class="sortable" data-sort="${c[0]}" data-tbl="cp">${c[1]}${sortArrow('cp',c[0])}</th>`:`<th>${c[1]}</th>`).join('')}</tr></thead><tbody>${regs.map(r=>`<tr>
     <td style="font-family:monospace;color:var(--muted)">${escapeHtml(r.id)}</td>
     <td>${escapeHtml(r.name)}</td>
     <td>${escapeHtml(r.phone)}</td>
     <td>${escapeHtml(r.company||'—')}</td>
-    <td>${escapeHtml(r.notes||'—')}</td>
+    <td>${escapeHtml(r.client_name||'—')}</td>
+    <td>${escapeHtml(r.cp_region||'—')}</td>
+    <td>${fmtConfig(r.configuration)}</td>
     <td>${fmtDate(r.timestamp)}</td>
     <td><button class="eye-btn" data-view="${escapeHtml(r.id)}">👁 View</button></td>
   </tr>`).join('')}</tbody></table>`;
@@ -511,28 +530,35 @@ function renderCpTable(){
 }
 
 /* ===================== CLIENT TABLE ===================== */
-let clientConfigF='all';
+let clientConfigF='all', clientVisitF='all';
 document.querySelectorAll('#clientConfigFilter .fpill').forEach(p=>p.addEventListener('click',()=>{
   document.querySelectorAll('#clientConfigFilter .fpill').forEach(x=>x.classList.remove('active'));
   p.classList.add('active'); clientConfigF=p.dataset.config; renderClientTable();
 }));
+document.querySelectorAll('#clientVisitFilter .fpill').forEach(p=>p.addEventListener('click',()=>{
+  document.querySelectorAll('#clientVisitFilter .fpill').forEach(x=>x.classList.remove('active'));
+  p.classList.add('active'); clientVisitF=p.dataset.visit; renderClientTable();
+}));
 document.getElementById('clientSearch').addEventListener('input', renderClientTable);
 function renderClientTable(){
   let regs = getRegistrations().filter(r=>r.type==='client');
-  if(clientConfigF!=='all') regs=regs.filter(r=>r.configuration===clientConfigF);
+  if(clientConfigF!=='all') regs=regs.filter(r=>matchesConfig(r,clientConfigF));
+  if(clientVisitF!=='all') regs=regs.filter(r=>(r.visitType||'new')===clientVisitF);
   regs = filterRows(regs, document.getElementById('clientSearch').value.trim());
   regs = sortRows(regs, sortState.client);
   const block=document.getElementById('clientBlock');
   if(!regs.length){ block.innerHTML=emptyState('No clients found'); return; }
-  const cols=[['id','#'],['name','Name'],['phone','Phone'],['city','City'],['configuration','Config'],['source','Source'],['bookingTimeline','Booking'],['createdAt','Date/Time'],['','Actions']];
+  const cols=[['id','#'],['name','Name'],['phone','Phone'],['region','Region'],['line_of_work','Line of Work'],['configuration','Config'],['interestedFor','Interested For'],['enquirySource','Source'],['visitType','Visit'],['createdAt','Date/Time'],['','Actions']];
   block.innerHTML=`<table><thead><tr>${cols.map(c=>c[0]?`<th class="sortable" data-sort="${c[0]}" data-tbl="client">${c[1]}${sortArrow('client',c[0])}</th>`:`<th>${c[1]}</th>`).join('')}</tr></thead><tbody>${regs.map(r=>`<tr>
     <td style="font-family:monospace;color:var(--muted)">${escapeHtml(r.id)}</td>
     <td>${escapeHtml(r.name)}</td>
     <td>${escapeHtml(r.phone)}</td>
-    <td>${escapeHtml(r.city||'—')}</td>
-    <td>${CONFIG_LABELS[r.configuration]||'—'}</td>
-    <td>${escapeHtml(sourceLabel(r))}</td>
-    <td>${BOOKING_LABELS[r.bookingTimeline]||'—'}</td>
+    <td>${escapeHtml(r.region||'—')}</td>
+    <td>${escapeHtml(r.line_of_work||'—')}</td>
+    <td>${fmtConfig(r.configuration)}</td>
+    <td style="text-transform:capitalize">${escapeHtml(r.interestedFor||'—')}</td>
+    <td>${escapeHtml(ENQUIRY_LABELS[r.enquirySource]||r.enquirySource||'—')}</td>
+    <td>${visitBadge(r.visitType)}</td>
     <td>${fmtDate(r.timestamp)}</td>
     <td><button class="eye-btn" data-view="${escapeHtml(r.id)}">👁 View</button></td>
   </tr>`).join('')}</tbody></table>`;
@@ -569,20 +595,23 @@ function openDetail(id){
   if(r.type==='channel_partner'){
     html += detailField('Phone', r.phone);
     html += detailField('Company', r.company);
-    html += `<div class="full">${detailField('Notes', r.notes)}</div>`;
+    html += detailField('Email', r.cp_email);
+    html += detailField('Client Name', r.client_name);
+    html += detailField('Line of Work', r.line_of_work);
+    html += detailField('Client Region', r.cp_region);
+    html += `<div class="full"><div class="dl">Configuration</div><div class="dv">${escapeHtml(fmtConfig(r.configuration))}</div></div>`;
+    html += detailField('Interested For', r.interestedFor);
     html += detailField('Registered', fmtDate(r.timestamp));
   } else {
     html += detailField('Email', r.email);
     html += detailField('Phone', r.phone);
-    html += detailField('City', r.city);
-    html += detailField('Aadhaar (last 4)', r.aadhaar);
-    html += detailField('Configuration', CONFIG_LABELS[r.configuration]||r.configuration);
-    html += detailField('Booking Timeline', BOOKING_LABELS[r.bookingTimeline]||r.bookingTimeline);
-    html += detailField('Source', r.source==='channel_partner'?'Through Channel Partner':'Direct Enquiry');
-    if(r.source==='channel_partner') html += detailField('Channel Partner', r.channelPartnerName);
-    else html += detailField('Enquiry Source', ENQUIRY_LABELS[r.enquirySource]||r.enquirySource);
+    html += detailField('Region', r.region);
+    html += detailField('Line of Work', r.line_of_work);
+    html += `<div class="full"><div class="dl">Configuration</div><div class="dv">${escapeHtml(fmtConfig(r.configuration))}</div></div>`;
+    html += detailField('Interested For', r.interestedFor);
+    html += detailField('Source', ENQUIRY_LABELS[r.enquirySource]||r.enquirySource);
+    html += `<div class="full"><div class="dl">Visit Type</div><div class="dv">${visitBadge(r.visitType)}</div></div>`;
     html += detailField('Registered', fmtDate(r.timestamp));
-    html += `<div class="full">${detailField('Notes', r.notes)}</div>`;
   }
   grid.innerHTML = html;
   document.getElementById('detailOverlay').classList.add('active');
