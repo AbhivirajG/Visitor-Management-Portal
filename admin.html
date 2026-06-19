@@ -289,22 +289,26 @@ tbody tr:hover{background:rgba(201,164,98,0.04)}
     <!-- EXPORT TAB -->
     <section class="tab-panel" id="exportTab">
       <h1 class="page-title">Export Data</h1>
-      <p class="page-sub">Download registration data as CSV files</p>
+      <p class="page-sub">Each export maps directly to a tab in your Sales MIS sheet</p>
       <div class="export-grid">
         <div class="export-row">
-          <div class="info">Export All Registrations<small>Every entry with all fields</small></div>
+          <div class="info">Client MIS — All Entries<small>Paste into the "Client MIS" tab (columns A–R)</small></div>
           <button class="btn-outline" id="expAll">Download CSV</button>
         </div>
         <div class="export-row">
-          <div class="info">Export Channel Partners<small>Channel partner records only</small></div>
+          <div class="info">Client MIS — Direct Clients Only<small>Filter: direct walk-in / enquiry entries</small></div>
+          <button class="btn-outline" id="expClients">Download CSV</button>
+        </div>
+        <div class="export-row">
+          <div class="info">Client MIS — CP Referrals Only<small>Filter: channel partner entries</small></div>
           <button class="btn-outline" id="expCp">Download CSV</button>
         </div>
         <div class="export-row">
-          <div class="info">Export Clients<small>Client / visitor records only</small></div>
-          <button class="btn-outline" id="expClients">Download CSV</button>
+          <div class="info">Client Personal Information<small>Paste into the "Client Personal Information" tab</small></div>
+          <button class="btn-outline" id="expPersonal">Download CSV</button>
         </div>
         <div class="date-range">
-          <div class="info" style="font-size:14px;margin-bottom:12px">Export by Date Range</div>
+          <div class="info" style="font-size:14px;margin-bottom:12px">Export Client MIS by Date Range</div>
           <div class="dr-row">
             <div><label>From</label><input type="date" id="rangeFrom"></div>
             <div><label>To</label><input type="date" id="rangeTo"></div>
@@ -620,38 +624,65 @@ document.getElementById('detailClose').addEventListener('click', ()=>document.ge
 document.getElementById('detailOverlay').addEventListener('click', e=>{ if(e.target.id==='detailOverlay') document.getElementById('detailOverlay').classList.remove('active'); });
 
 /* ===================== CSV EXPORT ===================== */
-const CSV_HEADERS = ['ID','Type','Name','Email','Phone','Company','City','Aadhaar','Source','Enquiry Source','Channel Partner','Configuration','Booking Timeline','Notes','Timestamp'];
-function rowToCsv(r){
-  return [
-    r.id, r.type, r.name, r.email, r.phone, r.company, r.city, r.aadhaar,
-    r.source, ENQUIRY_LABELS[r.enquirySource]||r.enquirySource||'', r.channelPartnerName,
-    CONFIG_LABELS[r.configuration]||r.configuration||'', BOOKING_LABELS[r.bookingTimeline]||r.bookingTimeline||'',
-    r.notes, r.timestamp
-  ].map(csvCell).join(',');
-}
 function csvCell(v){ v = v==null?'':String(v); if(/[",\n]/.test(v)) return '"'+v.replace(/"/g,'""')+'"'; return v; }
-function downloadCsv(rows, filename){
-  if(!rows.length){ alert('No records to export.'); return; }
-  const csv = [CSV_HEADERS.join(','), ...rows.map(rowToCsv)].join('\n');
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href=url; a.download=filename; document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
+function fmtDateShort(iso){ if(!iso) return ''; const d=new Date(iso); return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+
+// CLIENT MIS — matches "Client MIS" tab columns A–R
+const MIS_HEADERS = ['Date of Visit','Visit Type','Source','Client Name','Client Contact No.','CP Contact No.','Client Email','CP Email','CP / Broker Firm','CP Contact Person','Line of Work','Configuration','Interested For','Sales Executive','Personalised Message Sent?','Detailed Message Sent?','Next Follow-up','Remarks'];
+function rowToMis(r){
+  const config = Array.isArray(r.configuration) ? r.configuration.map(v=>CONFIG_LABELS[v]||v).join(' | ') : (CONFIG_LABELS[r.configuration]||r.configuration||'');
+  const intFor = r.interestedFor ? r.interestedFor.charAt(0).toUpperCase()+r.interestedFor.slice(1) : '';
+  if(r.type==='channel_partner'){
+    return [fmtDateShort(r.timestamp),'CP Referral','Through CP',r.client_name||'','',r.phone||'','',r.cp_email||'',r.company||'',r.name||'',r.line_of_work||'',config,intFor,'','','','',''].map(csvCell).join(',');
+  } else {
+    const vt = r.visitType ? r.visitType.charAt(0).toUpperCase()+r.visitType.slice(1) : 'New';
+    return [fmtDateShort(r.timestamp),vt,'Direct',r.name||'',r.phone||'','',r.email||'','','','',r.line_of_work||'',config,intFor,'','','','',''].map(csvCell).join(',');
+  }
 }
-document.getElementById('allExportBtn').addEventListener('click', ()=>downloadCsv(getRegistrations(),'bungalows-all.csv'));
-document.getElementById('cpExportBtn').addEventListener('click', ()=>downloadCsv(getRegistrations().filter(r=>r.type==='channel_partner'),'bungalows-channel-partners.csv'));
-document.getElementById('clientExportBtn').addEventListener('click', ()=>downloadCsv(getRegistrations().filter(r=>r.type==='client'),'bungalows-clients.csv'));
-document.getElementById('expAll').addEventListener('click', ()=>downloadCsv(getRegistrations(),'bungalows-all.csv'));
-document.getElementById('expCp').addEventListener('click', ()=>downloadCsv(getRegistrations().filter(r=>r.type==='channel_partner'),'bungalows-channel-partners.csv'));
-document.getElementById('expClients').addEventListener('click', ()=>downloadCsv(getRegistrations().filter(r=>r.type==='client'),'bungalows-clients.csv'));
+function downloadMis(rows, filename){
+  if(!rows.length){ alert('No records to export.'); return; }
+  const csv = [MIS_HEADERS.join(','), ...rows.map(rowToMis)].join('\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// CLIENT PERSONAL INFORMATION — matches "Client Personal Information" tab
+const PERSONAL_HEADERS = ['Client Name','Source','Line of Work','Location / Region','How did you hear about the project'];
+function rowToPersonal(r){
+  if(r.type==='channel_partner'){
+    return [r.client_name||'','Through Channel Partner',r.line_of_work||'',r.cp_region||'','Through Channel Partner'].map(csvCell).join(',');
+  } else {
+    return [r.name||'','Direct',r.line_of_work||'',r.region||'',ENQUIRY_LABELS[r.enquirySource]||r.enquirySource||''].map(csvCell).join(',');
+  }
+}
+function downloadPersonal(rows, filename){
+  if(!rows.length){ alert('No records to export.'); return; }
+  const csv = [PERSONAL_HEADERS.join(','), ...rows.map(rowToPersonal)].join('\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// Table-level export buttons
+document.getElementById('allExportBtn').addEventListener('click', ()=>downloadMis(getRegistrations(),'client-mis-all.csv'));
+document.getElementById('cpExportBtn').addEventListener('click', ()=>downloadMis(getRegistrations().filter(r=>r.type==='channel_partner'),'client-mis-cp.csv'));
+document.getElementById('clientExportBtn').addEventListener('click', ()=>downloadMis(getRegistrations().filter(r=>r.type==='client'),'client-mis-direct.csv'));
+
+// Export tab buttons
+document.getElementById('expAll').addEventListener('click', ()=>downloadMis(getRegistrations(),'client-mis-all.csv'));
+document.getElementById('expClients').addEventListener('click', ()=>downloadMis(getRegistrations().filter(r=>r.type==='client'),'client-mis-direct.csv'));
+document.getElementById('expCp').addEventListener('click', ()=>downloadMis(getRegistrations().filter(r=>r.type==='channel_partner'),'client-mis-cp.csv'));
+document.getElementById('expPersonal').addEventListener('click', ()=>downloadPersonal(getRegistrations(),'client-personal-info.csv'));
 document.getElementById('expRange').addEventListener('click', ()=>{
   const from = document.getElementById('rangeFrom').value;
   const to = document.getElementById('rangeTo').value;
   let regs = getRegistrations();
   if(from){ const f=new Date(from); f.setHours(0,0,0,0); regs=regs.filter(r=>new Date(r.timestamp)>=f); }
   if(to){ const t=new Date(to); t.setHours(23,59,59,999); regs=regs.filter(r=>new Date(r.timestamp)<=t); }
-  downloadCsv(regs, 'bungalows-range.csv');
+  downloadMis(regs, 'client-mis-range.csv');
 });
 
 /* ===================== REFRESH BUTTON ===================== */
