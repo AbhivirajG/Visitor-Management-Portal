@@ -454,6 +454,7 @@ textarea{resize:vertical;min-height:84px}
     <h1 class="success-title">Registration Successful</h1>
     <div class="gold-divider"></div>
     <div class="success-thanks">Thank you, <span id="successName">—</span></div>
+    <div id="successVisitBadge" style="display:none;margin:10px 0 4px"></div>
     <div class="success-sub">Your registration has been recorded.</div>
     <div class="success-id">Registration ID: #<span id="successId">—</span></div>
     <div class="success-actions">
@@ -487,6 +488,13 @@ textarea{resize:vertical;min-height:84px}
 /* ===================== DATA LAYER (Supabase) ===================== */
 const SUPABASE_URL = 'https://xlcxmewqhtdfrejwmcim.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_0xF7srGG1ANRDbbeLALsiA_x1mmOKUK';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpRxclmoKFbtMJ_T1vNwv_Q4-rpbuLvXpDHInKJo1wbW41pSCCorad8QwFvn1CzTn9/exec';
+
+function sendToSheet(obj){
+  const payload = { type:'INSERT', record:{ id:obj.id, type:obj.type, timestamp:obj.timestamp, data:obj } };
+  fetch(APPS_SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
+    .catch(err => console.warn('Sheet sync failed:', err));
+}
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let _cache = [];
 
@@ -653,7 +661,9 @@ cpForm.addEventListener('submit', async e=>{
   const cpSubmitBtn = cpForm.querySelector('button[type="submit"]');
   cpSubmitBtn.disabled=true; cpSubmitBtn.textContent='Saving…';
   try {
-    await saveRegistration({ id, type:'channel_partner', name, phone, company, cp_email, client_name, line_of_work, cp_region, configuration: cpState.config, interestedFor: cpState.interestedFor, timestamp:new Date().toISOString(), createdAt:Date.now() });
+    const cpObj = { id, type:'channel_partner', name, phone, company, cp_email, client_name, line_of_work, cp_region, configuration: cpState.config, interestedFor: cpState.interestedFor, timestamp:new Date().toISOString(), createdAt:Date.now() };
+    await saveRegistration(cpObj);
+    sendToSheet(cpObj);
     showSuccess(name, id);
   } catch(err) {
     alert('Failed to save. Please check your connection and try again.');
@@ -748,7 +758,7 @@ clientForm.addEventListener('submit', async e=>{
   const clientSubmitBtn = clientForm.querySelector('button[type="submit"]');
   clientSubmitBtn.disabled=true; clientSubmitBtn.textContent='Submitting…';
   try {
-    await saveRegistration({
+    const clientObj = {
       id, type:'client', name, email, phone, region, line_of_work,
       source: 'direct',
       enquirySource: clientState.enquiry,
@@ -756,8 +766,10 @@ clientForm.addEventListener('submit', async e=>{
       interestedFor: clientState.interestedFor,
       visitType,
       timestamp:new Date().toISOString(), createdAt:Date.now()
-    });
-    showSuccess(name, id);
+    };
+    await saveRegistration(clientObj);
+    sendToSheet(clientObj);
+    showSuccess(name, id, visitType);
   } catch(err) {
     alert('Failed to save registration. Please check your connection and try again.');
     clientSubmitBtn.disabled=false; clientSubmitBtn.textContent='Submit Registration';
@@ -765,9 +777,19 @@ clientForm.addEventListener('submit', async e=>{
 });
 
 /* ===================== SUCCESS ===================== */
-function showSuccess(name, id){
+function showSuccess(name, id, visitType){
   document.getElementById('successName').textContent = name;
   document.getElementById('successId').textContent = id;
+  const badge = document.getElementById('successVisitBadge');
+  if(visitType){
+    const isRevisit = visitType === 'revisit';
+    badge.innerHTML = isRevisit
+      ? '<span style="display:inline-block;padding:6px 18px;border-radius:20px;font-size:12px;font-weight:500;letter-spacing:0.08em;background:rgba(201,164,98,0.25);color:var(--gold-light);border:1px solid rgba(201,164,98,0.4)">↩ RETURNING VISITOR</span>'
+      : '<span style="display:inline-block;padding:6px 18px;border-radius:20px;font-size:12px;font-weight:500;letter-spacing:0.08em;background:rgba(63,174,90,0.2);color:#7ee8a2;border:1px solid rgba(63,174,90,0.3)">✦ NEW VISITOR</span>';
+    badge.style.display = 'block';
+  } else {
+    badge.style.display = 'none';
+  }
   showScreen('success');
 }
 document.getElementById('registerAnother').addEventListener('click', ()=>{
