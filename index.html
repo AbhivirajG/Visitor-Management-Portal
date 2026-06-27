@@ -395,7 +395,7 @@ textarea{resize:vertical;min-height:84px}
             <div class="err-msg">Please enter the full name.</div>
           </div>
           <div class="field" id="f_email">
-            <label>Email <span class="req">*</span></label>
+            <label>Email</label>
             <input type="email" name="email" autocomplete="off">
             <div class="err-msg">Please enter a valid email address.</div>
           </div>
@@ -492,7 +492,7 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpRxclmoKFbtMJ
 
 function sendToSheet(obj){
   const payload = { type:'INSERT', record:{ id:obj.id, type:obj.type, timestamp:obj.timestamp, data:obj } };
-  fetch(APPS_SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
+  fetch(APPS_SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload) })
     .catch(err => console.warn('Sheet sync failed:', err));
 }
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -733,7 +733,7 @@ clientForm.addEventListener('submit', async e=>{
   const region = clientForm.region.value;
   const line_of_work = clientForm.line_of_work.value.trim();
   setInvalid(document.getElementById('f_name'), !name); if(!name) ok=false;
-  const emailBad = !email || !emailRe.test(email);
+  const emailBad = email && !emailRe.test(email);
   setInvalid(document.getElementById('f_email'), emailBad); if(emailBad) ok=false;
   setInvalid(document.getElementById('f_phone'), !phoneRe.test(phone)); if(!phoneRe.test(phone)) ok=false;
   // config / booking
